@@ -177,6 +177,114 @@ contract IColony is ColonyDataTypes, IRecovery {
   function verifyReputationProof(bytes memory key, bytes memory value, uint256 branchMask, bytes32[] memory siblings)
     public view returns (bool isValid);
 
+  // Implemented in ColonyExpenditure.sol
+  /// @notice Add a new expenditure in the colony. Secured function to authorised members.
+  /// @param _permissionDomainId The domainId in which I have the permission to take this action
+  /// @param _childSkillIndex The index that the `_domainId` is relative to `_permissionDomainId`,
+  /// (only used if `_permissionDomainId` is different to `_domainId`)
+  /// @param _domainId The domain where the expenditure belongs
+  /// @return expenditureId Identifier of the newly created expenditure
+  function makeExpenditure(uint256 _permissionDomainId, uint256 _childSkillIndex, uint256 _domainId) public returns (uint256);
+
+  /// @notice Updates the expenditure owner. Can only be called by expenditure owner.
+  /// @param _id Expenditure identifier
+  function transferExpenditure(uint256 _id, address _newOwner) public;
+
+  /// @notice Cancels the expenditure and prevents further editing. Can only be called by expenditure owner.
+  /// @param _id Expenditure identifier
+  function cancelExpenditure(uint256 _id) public;
+
+  /// @notice Finalizes the expenditure and prevents further editing. Can only be called by expenditure owner.
+  /// @param _id Expenditure identifier
+  function finalizeExpenditure(uint256 _id) public;
+
+  /// @notice Set `_token` payout for _recipient in expenditure `_id` to `_amount`.
+  /// @param _id Id of the expenditure
+  /// @param _recipient Address of the recipient
+  /// @param _token Address of the token, `0x0` value indicates Ether
+  /// @param _amount Payout amount
+  function setExpenditurePayout(uint256 _id, address payable _recipient, address _token, uint256 _amount) public;
+
+  /// @notice Sets the skill on an expenditure payment. Can only be called by expenditure owner.
+  /// @param _id Expenditure identifier
+  /// @param _recipient Recipient of a payout
+  /// @param _skillId Id of the new skill to set
+  function setExpenditureSkill(uint256 _id, address _recipient, uint256 _skillId) public;
+
+  /// @notice Set the payout scalar for a recipient. Can only be called by Arbitration role.
+  /// @param _permissionDomainId The domainId in which I have the permission to take this action
+  /// @param _childSkillIndex The index that the `_domainId` is relative to `_permissionDomainId`,
+  /// (only used if `_permissionDomainId` is different to `_domainId`)
+  /// @param _id Expenditure identifier
+  /// @param _recipient Recipient of a payout
+  /// @param _payoutScalar Value to scale their payout (between 0 and UINT256_MAX/WAD, denominated in WAD)
+  function setExpenditurePayoutScalar(
+    uint256 _permissionDomainId,
+    uint256 _childSkillIndex,
+    uint256 _id,
+    address _recipient,
+    uint256 _payoutScalar
+    ) public;
+
+  /// @notice Set the claim delay for a recipient. Can only be called by Arbitration role.
+  /// @param _permissionDomainId The domainId in which I have the permission to take this action
+  /// @param _childSkillIndex The index that the `_domainId` is relative to `_permissionDomainId`,
+  /// (only used if `_permissionDomainId` is different to `_domainId`)
+  /// @param _id Expenditure identifier
+  /// @param _recipient Recipient of a payout
+  /// @param _claimDelay Time (in seconds) to delay claiming payout after finalization
+  function setExpenditureClaimDelay(
+    uint256 _permissionDomainId,
+    uint256 _childSkillIndex,
+    uint256 _id,
+    address _recipient,
+    uint256 _claimDelay
+    ) public;
+
+  /// @notice Claim payout for user `_recipient` in denomination `_token` for expenditure `_id`. Here the network receives its fee from each payout.
+  /// @param _id Expenditure identifier
+  /// @param _recipient Address of recipient
+  /// @param _token Address of the token, `0x0` value indicates Ether
+  function claimExpenditurePayout(uint256 _id, address payable _recipient, address _token) public;
+
+  /// @notice Get the number of expenditures in the colony.
+  /// @return count The expenditure count
+  function getExpenditureCount() public view returns (uint256 count);
+
+  /// @notice Returns an existing expenditure.
+  /// @param _id Expenditure identifier
+  /// @return status ExpenditureStatus property. 0 - Active. 1 - Cancelled. 2 - Finalized
+  /// @return owner Owner of the expenditure
+  /// @return fundingPotId Id of funding pot for expenditure
+  /// @return domainId Expenditure domain id
+  /// @return finalizedTimestamp Expenditure finalization timestamp
+  function getExpenditure(uint256 _id) public view returns (
+    ExpenditureStatus status,
+    address owner,
+    uint256 fundingPotId,
+    uint256 domainId,
+    uint256 finalizedTimestamp
+    );
+
+  /// @notice Returns an existing expenditure recipient.
+  /// @param _id Expenditure identifier
+  /// @param _recipient Expenditure recipient
+  /// @return claimDelay Seconds after finalizedTimestamp until they can claim their payout
+  /// @return payoutScalar Value to scale their payout and reputation (between 0 and UINT256_MAX / WAD)
+  /// @return skills List of skills for earning reputation
+  function getExpenditureRecipient(uint256 _id, address _recipient) public view returns (
+    uint256 claimDelay,
+    uint256 payoutScalar,
+    uint256[] memory skills
+    );
+
+  /// @notice Returns an existing expenditure recipient's payout.
+  /// @param _id Expenditure identifier
+  /// @param _recipient Recipient address
+  /// @param _token Token address
+  /// @return amount Amount of the payout for that recipient/token.
+  function getExpenditurePayout(uint256 _id, address _recipient, address _token) public view returns (uint256 amount);
+
   // Implemented in ColonyPayment.sol
   /// @notice Add a new payment in the colony. Secured function to authorised members.
   /// @param _permissionDomainId The domainId in which I have the permission to take this action

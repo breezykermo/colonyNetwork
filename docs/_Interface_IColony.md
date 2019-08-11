@@ -71,6 +71,18 @@ Allows the colony to bootstrap itself by having initial reputation and token `_a
 |_amount|int[]|Amount of reputation/tokens for every address
 
 
+### `cancelExpenditure`
+
+Cancels the expenditure and prevents further editing. Can only be called by expenditure owner.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+
+
 ### `cancelTask`
 
 Cancel a task at any point before it is finalized. Secured function to authorised members. Any funds assigned to its funding pot can be moved back to the domain via `IColony.moveFundsBetweenPots`.
@@ -93,6 +105,20 @@ Move any funds received by the colony in `_token` denomination to the top-level 
 
 |Name|Type|Description|
 |---|---|---|
+|_token|address|Address of the token, `0x0` value indicates Ether
+
+
+### `claimExpenditurePayout`
+
+Claim payout for user `_recipient` in denomination `_token` for expenditure `_id`. Here the network receives its fee from each payout.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+|_recipient|address|Address of recipient
 |_token|address|Address of the token, `0x0` value indicates Ether
 
 
@@ -185,6 +211,18 @@ Executes a task role update transaction `_data` which is approved and signed by 
 |_mode|uint8[]|How the signature was generated - 0 for Geth-style (usual), 1 for Trezor-style (only Trezor does this)
 |_value|uint256|The transaction value, i.e. number of wei to be sent when the transaction is executed Currently we only accept 0 value transactions but this is kept as a future option
 |_data|bytes|The transaction data
+
+
+### `finalizeExpenditure`
+
+Finalizes the expenditure and prevents further editing. Can only be called by expenditure owner.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
 
 
 ### `finalizePayment`
@@ -301,6 +339,78 @@ Get the number of domains in the colony.
 |Name|Type|Description|
 |---|---|---|
 |count|uint256|The domain count. Min 1 as the root domain is created at the same time as the colony
+
+### `getExpenditure`
+
+Returns an existing expenditure.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+
+**Return Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|status|ExpenditureStatus|ExpenditureStatus property. 0 - Active. 1 - Cancelled. 2 - Finalized
+|owner|address|Owner of the expenditure
+|fundingPotId|uint256|Id of funding pot for expenditure
+|domainId|uint256|Expenditure domain id
+|finalizedTimestamp|uint256|Expenditure finalization timestamp
+
+### `getExpenditureCount`
+
+Get the number of expenditures in the colony.
+
+
+
+**Return Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|count|uint256|The expenditure count
+
+### `getExpenditurePayout`
+
+Returns an existing expenditure recipient's payout.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+|_recipient|address|Recipient address
+|_token|address|Token address
+
+**Return Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|amount|uint256|Amount of the payout for that recipient/token.
+
+### `getExpenditureRecipient`
+
+Returns an existing expenditure recipient.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+|_recipient|address|Expenditure recipient
+
+**Return Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|claimDelay|uint256|Seconds after finalizedTimestamp until they can claim their payout
+|payoutScalar|uint256|Value to scale their payout and reputation (between 0 and UINT256_MAX / WAD)
+|skills|uint256[]|List of skills for earning reputation
 
 ### `getFundingPot`
 
@@ -634,6 +744,25 @@ Called once when the colony is created to initialise certain storage slot values
 |_token|address|Address of the colony ERC20 Token
 
 
+### `makeExpenditure`
+
+Add a new expenditure in the colony. Secured function to authorised members.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_permissionDomainId|uint256|The domainId in which I have the permission to take this action
+|_childSkillIndex|uint256|The index that the `_domainId` is relative to `_permissionDomainId`, (only used if `_permissionDomainId` is different to `_domainId`)
+|_domainId|uint256|The domain where the expenditure belongs
+
+**Return Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|uint256|uint256|
+
 ### `makeTask`
 
 Make a new task in the colony. Secured function to authorised members.
@@ -810,6 +939,67 @@ Set new colony architecture role. Can be called by root role or architecture rol
 |_user|address|User we want to give an architecture role to
 |_domainId|uint256|Domain in which we are giving user the role
 |_setTo|bool|The state of the role permission (true assign the permission, false revokes it)
+
+
+### `setExpenditureClaimDelay`
+
+Set the claim delay for a recipient. Can only be called by Arbitration role.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_permissionDomainId|uint256|The domainId in which I have the permission to take this action
+|_childSkillIndex|uint256|The index that the `_domainId` is relative to `_permissionDomainId`, (only used if `_permissionDomainId` is different to `_domainId`)
+|_id|uint256|Expenditure identifier
+|_recipient|address|Recipient of a payout
+|_claimDelay|uint256|Time (in seconds) to delay claiming payout after finalization
+
+
+### `setExpenditurePayout`
+
+Set `_token` payout for _recipient in expenditure `_id` to `_amount`.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Id of the expenditure
+|_recipient|address|Address of the recipient
+|_token|address|Address of the token, `0x0` value indicates Ether
+|_amount|uint256|Payout amount
+
+
+### `setExpenditurePayoutScalar`
+
+Set the payout scalar for a recipient. Can only be called by Arbitration role.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_permissionDomainId|uint256|The domainId in which I have the permission to take this action
+|_childSkillIndex|uint256|The index that the `_domainId` is relative to `_permissionDomainId`, (only used if `_permissionDomainId` is different to `_domainId`)
+|_id|uint256|Expenditure identifier
+|_recipient|address|Recipient of a payout
+|_payoutScalar|uint256|Value to scale their payout (between 0 and UINT256_MAX/WAD, denominated in WAD)
+
+
+### `setExpenditureSkill`
+
+Sets the skill on an expenditure payment. Can only be called by expenditure owner.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+|_recipient|address|Recipient of a payout
+|_skillId|uint256|Id of the new skill to set
 
 
 ### `setFundingRole`
@@ -1110,6 +1300,19 @@ Submit a hashed secret of the rating for work in task `_id` which was performed 
 |_id|uint256|Id of the task
 |_role|uint8|Id of the role, as defined in TaskRole enum
 |_ratingSecret|bytes32|`keccak256` hash of a salt and 0-50 rating score (in increments of 10, .e.g 0, 10, 20, 30, 40 or 50). Can be generated via `IColony.generateSecret` helper function.
+
+
+### `transferExpenditure`
+
+Updates the expenditure owner. Can only be called by expenditure owner.
+
+
+**Parameters**
+
+|Name|Type|Description|
+|---|---|---|
+|_id|uint256|Expenditure identifier
+|_newOwner|address|
 
 
 ### `updateColonyOrbitDB`

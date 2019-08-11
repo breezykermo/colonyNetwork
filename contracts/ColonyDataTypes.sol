@@ -169,6 +169,23 @@ contract ColonyDataTypes {
     uint256 blockTimestamp;
   }
 
+  struct Expenditure {
+    ExpenditureStatus status;
+    address owner;
+    uint256 fundingPotId;
+    uint256 domainId;
+
+    uint256 finalizedTimestamp;
+    mapping (address => uint256) claimDelays;
+
+    mapping (address => mapping (address => uint256)) payouts;
+    mapping (address => uint256) payoutScalars;
+
+    mapping (address => uint256[]) skills;
+  }
+
+  enum ExpenditureStatus { Active, Cancelled, Finalized }
+
   struct Payment {
     address payable recipient;
     bool finalized;
@@ -217,7 +234,7 @@ contract ColonyDataTypes {
 
   // We do have 1 "special" funding pot with id 0 for rewards which will carry the "Unassigned" type.
   // as they are unrelated to other entities in the Colony the same way the remaining funding pots are releated to domains, tasks and payouts.
-  enum FundingPotAssociatedType { Unassigned, Domain, Task, Payment }
+  enum FundingPotAssociatedType { Unassigned, Domain, Task, Payment, Expenditure }
 
   struct FundingPot {
     // Funding pots can store multiple token balances, for ETH use 0x0 address
